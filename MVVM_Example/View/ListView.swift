@@ -7,39 +7,35 @@
 
 import SwiftUI
 
-struct Item: Identifiable {
-    var id: UUID
-    var name: String
-    var age: Int
-}
 
-struct ContentView: View {
+
+struct ListView: View {
     
-    @State var items = [Item(id: UUID(), name: "Renato", age: 47),
-                 Item(id: UUID(), name: "Tracey", age: 44),
-                 Item(id: UUID(), name: "Emilia", age: 4)]
+    @ObservedObject var listManager: ListManager
+
     
     var body: some View {
         VStack {
             NavigationView {
                 List {
-                    ForEach(items) { item in
-                        HStack(spacing: 40) {
-                            Text(item.name)
-                                .font(.title)
-                            Spacer()
-                            Text(String(item.age))
-                                .font(.headline)
-                                .foregroundColor(.red)
-                        }
+                    ForEach(listManager.items) { item in
+                       NavigationLink(destination: {
+                           HStack(spacing: 40) {
+                               Text(item.name)
+                                   .font(.title)
+                               Spacer()
+                               Text(String(item.age))
+                                   .font(.headline)
+                                   .foregroundColor(.red)
+                           }.padding()
+                       }, label: {Text(item.name)})
                     }
                     .onDelete(perform: { indexSet in
-                        for index in indexSet {
-                            items.remove(at: index)
-                        }
+                        listManager.delete(at: indexSet)
+                        
                     })
                     .onMove(perform: { indices, newOffset in
-                        items.move(fromOffsets: indices, toOffset: newOffset)
+                        listManager.move(indices: indices, newOffset: newOffset)
                     })
                     
                 }
@@ -48,7 +44,7 @@ struct ContentView: View {
                     ToolbarItemGroup(placement: .navigationBarTrailing) {
                         EditButton()
                         Button(action: {
-                            items.append(Item(id: UUID(), name: "New Name", age: 30))
+                            listManager.addItem()
                         }, label: {
                             Image(systemName: "plus")
                         })
@@ -63,6 +59,9 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        Group {
+            ListView(listManager: ListManager())
+            ListView(listManager: ListManager())
+        }
     }
 }
